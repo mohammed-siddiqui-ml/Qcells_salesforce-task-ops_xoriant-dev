@@ -513,17 +513,16 @@ def create_case(case_information, customer_details):
             error_msg = error_data.get('message') if error_data else f"Failed to create task: {resp.status_code}"
             raise Exception(error_msg)
 
-        logger.info("")
         resp_json = resp.json()
-        logger.info("")
+        logger.info(f"Successfully parsed Salesforce response: {resp_json}")
         case_id = resp_json.get("id")
-        logger.info("")
+        logger.info(f"Extracted Case ID: {case_id}")
         return case_id
 
         # return resp.json()
 
     except requests.exceptions.RequestException as e:
-        logger.info("")
+        logger.info("Task Creation failed")
         raise Exception(f"Failed to create task: {str(e)}")
 
 
