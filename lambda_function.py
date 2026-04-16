@@ -506,7 +506,6 @@ def create_case(case_information, customer_details):
         logger.info(f"Response Body: {resp.text}")
 
         if resp.status_code != 201:
-            logger.info("")
             error_data = safe_json(resp.text)
             print(error_data)
             logger.info(error_data)
