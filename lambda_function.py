@@ -6,6 +6,7 @@ Provides CRUD operations for Salesforce Tasks using shared authentication utilit
 import json
 import requests
 import logging
+import sys
 import traceback
 import os
 import boto3
@@ -28,12 +29,17 @@ attachments_table = dynamodb.Table(DYNAMODB_TABLE)
 connect_client = boto3.client('connect', region_name=DYNAMODB_REGION)
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s - Line: %(lineno)d - %(funcName)s: %(message)s'
-)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+for handler in logger.handlers:
+    logger.removeHandler(handler)
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(
+    '%(levelname)s - Line:%(lineno)d - %(funcName)s - %(name)s: %(message)s'
+)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 # Initialize AWS clients
 pinpoint_client = boto3.client("pinpoint")
