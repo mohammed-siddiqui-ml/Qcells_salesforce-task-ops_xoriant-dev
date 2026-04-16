@@ -751,7 +751,7 @@ def lambda_handler(event, context):
                     'customerInstaller': customer_details.get('customerInstaller')
                 }
                 if caseId:
-                    updated_attributes['caseId'] = caseId
+                    updated_attributes['cseCaseId'] = caseId
             elif case_information.get('enggType') == 'FAE':
                 updated_attributes = {
                     **contactAttributes,
@@ -759,7 +759,7 @@ def lambda_handler(event, context):
                     'isNewCaseCSE': case_information.get('isNewCase')
                 }
                 if caseId:
-                    updated_attributes['caseId'] = caseId
+                    updated_attributes['faeCaseId'] = caseId
 
             updated_attributes = {k: str(v) for k, v in updated_attributes.items() if v and str(v).strip()}
 
