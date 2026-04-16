@@ -28,6 +28,10 @@ attachments_table = dynamodb.Table(DYNAMODB_TABLE)
 connect_client = boto3.client('connect', region_name=DYNAMODB_REGION)
 
 # Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s - Line: %(lineno)d - %(funcName)s: %(message)s'
+)
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -488,7 +492,6 @@ def create_case(case_information, customer_details):
         case_payload['RecordTypeId'] = record_type_id
 
     print(f"Case payload: {str(case_payload)}")
-
     # Create Case in Salesforce
     create_url = f"{instance_url}/services/data/v59.0/sobjects/Case/"
     headers = {
@@ -497,22 +500,28 @@ def create_case(case_information, customer_details):
     }
 
     try:
+        logger.info("Starting Case Creation Request")
         resp = requests.post(create_url, headers=headers, json=case_payload)
-        print(resp.text)
+        logger.info(f"Response Status: {resp.status_code}")
+        logger.info(f"Response Body: {resp.text}")
 
         if resp.status_code != 201:
             error_data = safe_json(resp.text)
             print(error_data)
+            logger.info(error_data)
             error_msg = error_data.get('message') if error_data else f"Failed to create task: {resp.status_code}"
             raise Exception(error_msg)
 
         resp_json = resp.json()
+        logger.info(f"Successfully parsed Salesforce response: {resp_json}")
         case_id = resp_json.get("id")
+        logger.info(f"Extracted Case ID: {case_id}")
         return case_id
 
         # return resp.json()
 
     except requests.exceptions.RequestException as e:
+        logger.info("Task Creation failed")
         raise Exception(f"Failed to create task: {str(e)}")
 
 
