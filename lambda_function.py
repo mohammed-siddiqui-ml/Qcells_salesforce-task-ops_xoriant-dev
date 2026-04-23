@@ -426,6 +426,45 @@ def find_id(type, number):
         print(f"Error in find_contact_and_cases_by_phone: {str(e)}")
         raise
 
+def find_case_number(caseId):
+    """
+    Find case number by case id
+    Uses shared authentication utilities
+
+    Args:
+        caseId: Case Id to search
+
+    Returns:
+        dict: Case Number
+    """
+    try:
+        # Search for case by case number using shared sf_query
+        
+        query = f"""
+        SELECT CaseNumber
+        FROM Case
+        WHERE Id = '{caseId}'
+        LIMIT 1
+        """
+        print(f"Searching for case with case number: {caseId}")
+        
+        result = sf_query(query)
+        print(result)
+        data = result['data']
+
+        if data['totalSize'] == 0:
+            print(f"No case/ticket found for: {caseId}")
+            return None
+
+        resp = data['records'][0]
+        caseNumber = resp['CaseNumber']
+
+        return caseNumber
+
+    except Exception as e:
+        print(f"Error in find_case_number: {str(e)}")
+        raise
+
 def create_or_get_contact(phone, caller_name, email, record_type_id):
     if not phone:
         return None
@@ -495,7 +534,9 @@ def create_case(case_information, customer_details):
             'Subject': case_subject,
             'Description': case_information.get('descriptionOfIssue')
         }
-        lastName = customer_details.get('callerName').split(' ')[1]
+        # fix this if last name not present then take first name
+        name_parts = customer_details.get('callerName', '').split(' ')
+        lastName = name_parts[1] if len(name_parts) > 1 else name_parts[0]
         contact_id = create_or_get_contact(customer_details.get('phone'), lastName, customer_details.get('email'), record_type_id)
         case_payload["ContactId"] = contact_id
         record_type_id = os.environ.get("SF_RECORD_TYPE_INQUIRY")
@@ -795,9 +836,13 @@ def lambda_handler(event, context):
             except Exception as e:
                 print(f"Error sending survey SMS: {str(e)}")
                 return response(500, {'success': False, 'error': str(e)})
-
-            return response(200, {'success': True, 'data': result})
-
+            if caseId:
+                caseNumber = find_case_number(caseId)
+                result['caseId']=caseId
+                result['caseNumber']=caseNumber
+                return response(200, {'success': True, 'data': result})
+            else:
+                return response(200, {'success': True, 'data': result})
         elif action == 'find_id':
             # Handle find_id action for JavaScript frontend
             record_type = body.get('type')  # 'Case' or 'Task'
